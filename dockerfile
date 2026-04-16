@@ -1,2 +1,15 @@
-FROM alpine:latest
-CMD ["echo", "Hello, World!"]
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV DB_PATH=/data/todos.db
+VOLUME ["/data"]
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
