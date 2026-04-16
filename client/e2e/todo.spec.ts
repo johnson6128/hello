@@ -43,8 +43,8 @@ test('未完了フィルタが動作する', async ({ page }) => {
   await page.locator('input[type="checkbox"]').first().check()
 
   await page.getByRole('button', { name: '未完了' }).click()
-  await expect(page.getByText('未完了タスク')).toBeVisible()
-  await expect(page.getByText('完了タスク')).not.toBeVisible()
+  await expect(page.getByText('未完了タスク', { exact: true })).toBeVisible()
+  await expect(page.getByText('完了タスク', { exact: true })).not.toBeVisible()
 })
 
 test('完了済みフィルタが動作する', async ({ page }) => {
@@ -55,6 +55,6 @@ test('完了済みフィルタが動作する', async ({ page }) => {
   await page.locator('input[type="checkbox"]').first().check()
 
   await page.getByRole('button', { name: '完了済み' }).click()
-  await expect(page.getByText('完了タスク')).toBeVisible()
-  await expect(page.getByText('未完了タスク')).not.toBeVisible()
+  await expect(page.getByText('完了タスク', { exact: true })).toBeVisible()
+  await expect(page.getByText('未完了タスク', { exact: true })).not.toBeVisible()
 })
