@@ -15,9 +15,9 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run dev',
+    command: 'VITE_STORAGE=local npx vite --port 5173',
     url: 'http://localhost:5173',
+    timeout: 120_000,
     reuseExistingServer: !process.env.CI,
-    env: { VITE_STORAGE: 'local' },
   },
 })
