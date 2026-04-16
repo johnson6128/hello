@@ -1,15 +1,20 @@
-FROM python:3.12-slim
+FROM node:22-slim AS frontend
+WORKDIR /build/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ ./
+RUN npm run build
 
+FROM node:22-slim
 WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY server.js ./
+COPY --from=frontend /build/public ./public
 
 ENV DB_PATH=/data/todos.db
 VOLUME ["/data"]
 
-EXPOSE 5000
+EXPOSE 3000
 
-CMD ["python", "app.py"]
+CMD ["node", "server.js"]
