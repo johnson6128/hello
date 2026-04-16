@@ -5,30 +5,38 @@
 シンプルなTODO管理Webアプリです。
 
 - **GitHub Pages版**: ブラウザの `localStorage` でデータを保存（サーバー不要）
-- **Docker版**: Flask + SQLite バックエンドで動作
+- **Docker版**: Node.js (Express) + SQLite バックエンドで動作
 
 ## GitHub Pages での公開手順
 
-1. このブランチを `main` にマージする
-2. リポジトリの **Settings → Pages** を開く
-3. Source を **Deploy from a branch** に設定
-4. Branch: `main` / Folder: `/docs` を選択して **Save**
-5. しばらく待つと `https://<your-username>.github.io/hello/` で公開される
+1. このリポジトリの **Settings → Pages** を開く
+2. Source を **GitHub Actions** に設定
+3. `main` ブランチにpushするとCIが自動でビルド・デプロイを実行
+4. `https://<your-username>.github.io/hello/` で公開される
 
 ## Docker での起動
 
 ```bash
 docker build -t todo-app .
-docker run -p 5000:5000 -v todo-data:/data todo-app
-# → http://localhost:5000
+docker run -p 3000:3000 -v todo-data:/data todo-app
+# → http://localhost:3000
 ```
 
-依存関係のみでローカル起動する場合：
+## ローカルでの起動
 
 ```bash
-pip install -r requirements.txt
-python app.py
-# → http://localhost:5000
+npm install
+npm run build
+npm start
+# → http://localhost:3000
+```
+
+開発時（ホットリロード）:
+
+```bash
+npm install && npm start          # ターミナル1: バックエンド
+cd client && npm install && npm run dev  # ターミナル2: フロントエンド
+# → http://localhost:5173
 ```
 
 ## ライセンス
