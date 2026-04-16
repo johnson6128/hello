@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Todo, Filter } from './types'
+import { fetchTodos, createTodo, updateTodo, removeTodo } from './storage'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'すべて' },
@@ -14,9 +15,8 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/todos')
-      .then(r => r.json())
-      .then((data: Todo[]) => setTodos(data))
+    fetchTodos()
+      .then(setTodos)
       .finally(() => setLoading(false))
   }, [])
 
@@ -24,33 +24,19 @@ export default function App() {
     e.preventDefault()
     const title = newTitle.trim()
     if (!title) return
-    const res = await fetch('/api/todos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title }),
-    })
-    if (res.ok) {
-      const todo: Todo = await res.json()
-      setTodos(prev => [todo, ...prev])
-      setNewTitle('')
-    }
+    const todo = await createTodo(title)
+    setTodos(prev => [todo, ...prev])
+    setNewTitle('')
   }
 
   const toggleTodo = useCallback(async (id: number, done: boolean) => {
-    const res = await fetch(`/api/todos/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ done }),
-    })
-    if (res.ok) {
-      const updated: Todo = await res.json()
-      setTodos(prev => prev.map(t => (t.id === id ? updated : t)))
-    }
+    const updated = await updateTodo(id, done)
+    setTodos(prev => prev.map(t => (t.id === id ? updated : t)))
   }, [])
 
   const deleteTodo = useCallback(async (id: number) => {
-    const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' })
-    if (res.ok) setTodos(prev => prev.filter(t => t.id !== id))
+    await removeTodo(id)
+    setTodos(prev => prev.filter(t => t.id !== id))
   }, [])
 
   const visible = todos.filter(t => {
