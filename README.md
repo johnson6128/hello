@@ -1,50 +1,36 @@
-# Hello Project
+# Hello Project - TODO管理アプリ
 
 ## 概要
-このプロジェクトは、GitHub Container Registry (GHCR) を使用して Docker イメージを管理するサンプルプロジェクトです。
 
-## 必要条件
-- Docker
-- GitHub アカウント
-- Personal Access Token (PAT) または Fine-grained Token
+シンプルなTODO管理Webアプリです。
 
-## 使用方法
+- **GitHub Pages版**: ブラウザの `localStorage` でデータを保存（サーバー不要）
+- **Docker版**: Flask + SQLite バックエンドで動作
 
-### 1. Docker イメージのビルド
-以下のコマンドを使用して Docker イメージをビルドします：
+## GitHub Pages での公開手順
 
-```powershell
-# Dockerfile が存在するディレクトリで実行
-docker build -t ghcr.io/<your-username>/hello:latest .
+1. このブランチを `main` にマージする
+2. リポジトリの **Settings → Pages** を開く
+3. Source を **Deploy from a branch** に設定
+4. Branch: `main` / Folder: `/docs` を選択して **Save**
+5. しばらく待つと `https://<your-username>.github.io/hello/` で公開される
+
+## Docker での起動
+
+```bash
+docker build -t todo-app .
+docker run -p 5000:5000 -v todo-data:/data todo-app
+# → http://localhost:5000
 ```
 
-### 2. GHCR へのログイン
-GitHub のトークンを使用して GHCR にログインします：
+依存関係のみでローカル起動する場合：
 
-```powershell
-echo $PAT | docker login ghcr.io -u <your-username> --password-stdin
-```
-
-### 3. Docker イメージのプッシュ
-ビルドしたイメージを GHCR にプッシュします：
-
-```powershell
-docker push ghcr.io/<your-username>/hello:latest
-```
-
-## トラブルシューティング
-
-### エラー: `denied: permission_denied: The token provided does not match expected scopes`
-このエラーは、トークンのスコープが不足している場合に発生します。以下を確認してください：
-- トークンに `write:packages` スコープが含まれていること。
-- プライベートリポジトリの場合、`read:packages` スコープも必要です。
-
-### エラー: `unauthorized: authentication required`
-このエラーは、GHCR に正しくログインしていない場合に発生します。再度ログインしてください：
-
-```powershell
-echo $PAT | docker login ghcr.io -u <your-username> --password-stdin
+```bash
+pip install -r requirements.txt
+python app.py
+# → http://localhost:5000
 ```
 
 ## ライセンス
-このプロジェクトは MIT ライセンスの下で提供されます。
+
+MIT
