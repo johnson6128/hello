@@ -26,7 +26,8 @@ jobs:
         run: npm install --prefix client
 
       - name: Type check
-        run: npx --prefix client tsc --noEmit
+        working-directory: client
+        run: npx tsc --noEmit
 
       - name: Build frontend
         run: npm --prefix client run build
