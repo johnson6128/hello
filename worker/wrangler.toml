@@ -1,0 +1,8 @@
+name = "hello-todo"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "todo-db"
+database_id = "0c47e91b-107f-454d-a338-2f7231bf1dce"

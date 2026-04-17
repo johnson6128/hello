@@ -1,6 +1,7 @@
 import type { Todo } from './types'
 
 const USE_LOCAL = import.meta.env.VITE_STORAGE === 'local'
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
 const STORAGE_KEY = 'todos_v1'
 
 function loadLocal(): Todo[] {
@@ -18,7 +19,7 @@ function nextId(todos: Todo[]): number {
 
 export async function fetchTodos(): Promise<Todo[]> {
   if (USE_LOCAL) return loadLocal()
-  const res = await fetch('/api/todos')
+  const res = await fetch(`${API_BASE}/api/todos`)
   return res.json()
 }
 
@@ -34,7 +35,7 @@ export async function createTodo(title: string): Promise<Todo> {
     saveLocal([todo, ...todos])
     return todo
   }
-  const res = await fetch('/api/todos', {
+  const res = await fetch(`${API_BASE}/api/todos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title }),
@@ -49,7 +50,7 @@ export async function updateTodo(id: number, done: boolean): Promise<Todo> {
     saveLocal(todos.map(t => (t.id === id ? updated : t)))
     return updated
   }
-  const res = await fetch(`/api/todos/${id}`, {
+  const res = await fetch(`${API_BASE}/api/todos/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ done }),
@@ -62,5 +63,5 @@ export async function removeTodo(id: number): Promise<void> {
     saveLocal(loadLocal().filter(t => t.id !== id))
     return
   }
-  await fetch(`/api/todos/${id}`, { method: 'DELETE' })
+  await fetch(`${API_BASE}/api/todos/${id}`, { method: 'DELETE' })
 }
