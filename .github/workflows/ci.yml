@@ -37,7 +37,7 @@ jobs:
       - name: Build frontend
         run: npm --prefix client run build
         env:
-          VITE_STORAGE: local
+          VITE_API_URL: https://hello-todo.jamkline03.workers.dev
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
