@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Todo, Filter } from './types'
+import type { Todo, User, Filter } from './types'
 import { fetchTodos, createTodo, updateTodo, removeTodo } from './storage'
+import { fetchMe, setToken, clearToken } from './auth'
+import LoginPage from './LoginPage'
+
+const USE_LOCAL = import.meta.env.VITE_STORAGE === 'local'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'すべて' },
@@ -9,16 +13,41 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null)
+  const [authChecking, setAuthChecking] = useState(!USE_LOCAL)
   const [todos, setTodos] = useState<Todo[]>([])
   const [filter, setFilter] = useState<Filter>('all')
   const [newTitle, setNewTitle] = useState('')
   const [loading, setLoading] = useState(true)
 
+  // Auth check / token pickup after OAuth redirect
   useEffect(() => {
-    fetchTodos()
-      .then(setTodos)
-      .finally(() => setLoading(false))
+    if (USE_LOCAL) {
+      fetchTodos().then(setTodos).finally(() => setLoading(false))
+      return
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    if (token) {
+      setToken(token)
+      window.history.replaceState({}, '', '/')
+    }
+
+    fetchMe()
+      .then(setUser)
+      .catch(() => {
+        clearToken()
+        setLoading(false)
+      })
+      .finally(() => setAuthChecking(false))
   }, [])
+
+  // Fetch todos after user is confirmed
+  useEffect(() => {
+    if (USE_LOCAL || !user) return
+    fetchTodos().then(setTodos).finally(() => setLoading(false))
+  }, [user])
 
   const addTodo = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,6 +68,12 @@ export default function App() {
     setTodos(prev => prev.filter(t => t.id !== id))
   }, [])
 
+  const handleLogout = () => {
+    clearToken()
+    setUser(null)
+    setTodos([])
+  }
+
   const visible = todos.filter(t => {
     if (filter === 'active') return !t.done
     if (filter === 'done') return t.done
@@ -47,12 +82,40 @@ export default function App() {
 
   const doneCount = todos.filter(t => t.done).length
 
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-400">読み込み中...</p>
+      </div>
+    )
+  }
+
+  if (!USE_LOCAL && !user) return <LoginPage />
+
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center py-10 px-4">
       <div className="w-full max-w-lg">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          TODO 管理
-        </h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">TODO 管理</h1>
+          {user && (
+            <div className="flex items-center gap-3">
+              {user.avatar_url && (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <span className="text-sm text-gray-600 hidden sm:block">{user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
+        </div>
 
         <form onSubmit={addTodo} className="flex gap-2 mb-6">
           <input
