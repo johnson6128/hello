@@ -1,6 +1,15 @@
 # REST API仕様
 
-フルスタックモード時のみ使用。ベースURL: `http://localhost:3000`
+## エンドポイント
+
+本番環境ではCloudflare Pages Functions（`functions/api/[[route]].ts`）がプロキシとして機能し、実体はCloudflare Workers（Hono）が処理する。
+
+| 環境 | ベースURL |
+|---|---|
+| 本番（Cloudflare Pages） | `https://hello-todo.pages.dev/api` |
+| ローカル開発 | `http://localhost:3000/api` |
+
+フロントエンドからは常に `/api/*` への相対パスでアクセスする。
 
 ## エンドポイント一覧
 
@@ -14,7 +23,7 @@ TODO一覧を取得する。
     "id": 1,
     "title": "タスク名",
     "done": false,
-    "created_at": "2026-04-17 00:00:00"
+    "created_at": "2026-04-17T00:00:00.000Z"
   }
 ]
 ```
@@ -36,7 +45,7 @@ TODOを新規作成する。
   "id": 2,
   "title": "タスク名",
   "done": false,
-  "created_at": "2026-04-17 00:00:00"
+  "created_at": "2026-04-17T00:00:00.000Z"
 }
 ```
 
@@ -74,7 +83,18 @@ TODOを削除する。
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `id` | number | 自動採番の主キー |
+| `id` | number | 自動採番の主キー（D1 AUTOINCREMENT） |
 | `title` | string | タスク名（最大200文字） |
-| `done` | boolean | 完了フラグ |
-| `created_at` | string | 作成日時（SQLite TIMESTAMP） |
+| `done` | boolean | 完了フラグ（D1内部は 0/1 で保存） |
+| `created_at` | string | 作成日時（D1 TIMESTAMP、ISO 8601形式で返却） |
+
+## D1スキーマ
+
+```sql
+CREATE TABLE IF NOT EXISTS todos (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  title      TEXT    NOT NULL CHECK(length(title) <= 200),
+  done       INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```

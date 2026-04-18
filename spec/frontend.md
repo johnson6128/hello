@@ -15,8 +15,8 @@
 `client/src/storage.ts` がデータ操作を抽象化し、環境変数で実装を切り替える。
 
 ```
-VITE_STORAGE=local → localStorage（GitHub Pages）
-VITE_STORAGE未設定  → REST API（Docker / ローカル）
+VITE_STORAGE=local → localStorage（e2eテスト用）
+VITE_STORAGE未設定  → REST API（本番・ローカル開発）
 ```
 
 | 関数 | 説明 |
@@ -25,6 +25,8 @@ VITE_STORAGE未設定  → REST API（Docker / ローカル）
 | `createTodo(title)` | 作成 |
 | `updateTodo(id, done)` | 完了状態更新 |
 | `removeTodo(id)` | 削除 |
+
+本番ビルドでは `VITE_STORAGE` を設定せず、常にAPIモードで動作する。
 
 ## コンポーネント構成
 
@@ -44,17 +46,11 @@ App.tsx
 
 | コマンド | 説明 |
 |---|---|
-| `npm run dev` | 開発サーバー起動（localhost:5173） |
+| `npm run dev` | 開発サーバー起動（localhost:5173）、`/api` はlocalhost:3000へプロキシ |
 | `npm run build` | 本番ビルド（`../public/` に出力） |
 | `npm run e2e` | Playwright e2eテスト実行 |
 
-### GitHub Pages向けビルド
-
-```bash
-VITE_STORAGE=local npm run build
-```
-
-ビルド時にbaseパスを `/hello/` に設定（`vite.config.ts` の `base` オプション）。
+Viteの `base` は `/`（Cloudflare Pagesはルートで配信）。
 
 ## e2eテスト
 
@@ -69,4 +65,4 @@ VITE_STORAGE=local npm run build
 | 未完了フィルタが動作する | 未完了タスクのみ表示される |
 | 完了済みフィルタが動作する | 完了タスクのみ表示される |
 
-テスト実行時は `VITE_STORAGE=local` でVite dev serverを起動し、localStorageモードでテストする。
+テスト実行時は `VITE_STORAGE=local` でVite dev serverを起動し、localStorageモードでテストする（外部API不要）。
