@@ -1,17 +1,10 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 
 type Env = {
   DB: D1Database
 }
 
 const app = new Hono<{ Bindings: Env }>()
-
-app.use('/api/*', cors({
-  origin: ['https://johnson6128.github.io', 'http://localhost:5173', 'http://localhost:3000'],
-  allowMethods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  allowHeaders: ['Content-Type'],
-}))
 
 app.get('/api/todos', async (c) => {
   const { results } = await c.env.DB.prepare(
