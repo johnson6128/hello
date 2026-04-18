@@ -4,15 +4,27 @@
 
 シンプルなTODO管理Webアプリです。
 
-- **GitHub Pages版**: ブラウザの `localStorage` でデータを保存（サーバー不要）
-- **Docker版**: Node.js (Express) + SQLite バックエンドで動作
+## 構成
 
-## GitHub Pages での公開手順
+| 役割 | サービス | URL |
+|---|---|---|
+| フロントエンド | Cloudflare Pages | `https://hello-todo.pages.dev` |
+| API プロキシ | Pages Functions | `https://hello-todo.pages.dev/api/*` |
+| バックエンド | Cloudflare Workers (Hono) | `https://hello-todo.jamkline03.workers.dev` |
+| データベース | Cloudflare D1 (SQLite) | - |
+| CI/CD | GitHub Actions | ビルド → e2e → デプロイ |
 
-1. このリポジトリの **Settings → Pages** を開く
-2. Source を **GitHub Actions** に設定
-3. `main` ブランチにpushするとCIが自動でビルド・デプロイを実行
-4. `https://<your-username>.github.io/hello/` で公開される
+## ローカルでの起動
+
+```bash
+# バックエンド
+npm install && npm start
+# → http://localhost:3000
+
+# フロントエンド（別ターミナル・ホットリロード）
+cd client && npm install && npm run dev
+# → http://localhost:5173
+```
 
 ## Docker での起動
 
@@ -22,22 +34,36 @@ docker run -p 3000:3000 -v todo-data:/data todo-app
 # → http://localhost:3000
 ```
 
-## ローカルでの起動
+## Cloudflare へのデプロイ
+
+### 初回セットアップ
 
 ```bash
-npm install
-npm run build
-npm start
-# → http://localhost:3000
+# D1データベース作成
+cd worker
+npx wrangler login
+npx wrangler d1 create todo-db
+# → 出力された database_id を worker/wrangler.toml に設定
+
+# スキーマ適用
+npx wrangler d1 execute todo-db --remote --file=./schema.sql
+
+# Pagesプロジェクト作成
+npx wrangler pages project create hello-todo
 ```
 
-開発時（ホットリロード）:
+### GitHub Secrets の設定
 
-```bash
-npm install && npm start          # ターミナル1: バックエンド
-cd client && npm install && npm run dev  # ターミナル2: フロントエンド
-# → http://localhost:5173
-```
+| Secret名 | 取得場所 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare Dashboard → My Profile → API Tokens |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → 右サイドバー |
+
+APIトークンに必要な権限: `Workers Scripts:Edit`, `D1:Edit`, `Cloudflare Pages:Edit`
+
+### 自動デプロイ
+
+`main` ブランチにpushするとCIが自動でビルド・e2eテスト・デプロイを実行します。
 
 ## ライセンス
 
