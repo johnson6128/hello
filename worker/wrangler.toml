@@ -2,7 +2,15 @@ name = "hello-todo"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
+[vars]
+FRONTEND_URL = "https://hello-todo.pages.dev"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "todo-db"
 database_id = "0c47e91b-107f-454d-a338-2f7231bf1dce"
+
+# Secrets (set with `wrangler secret put <NAME>`):
+# GOOGLE_CLIENT_ID
+# GOOGLE_CLIENT_SECRET
+# JWT_SECRET

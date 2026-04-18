@@ -1,4 +1,5 @@
 import type { Todo } from './types'
+import { authHeaders } from './auth'
 
 const USE_LOCAL = import.meta.env.VITE_STORAGE === 'local'
 const STORAGE_KEY = 'todos_v1'
@@ -18,7 +19,7 @@ function nextId(todos: Todo[]): number {
 
 export async function fetchTodos(): Promise<Todo[]> {
   if (USE_LOCAL) return loadLocal()
-  const res = await fetch('/api/todos')
+  const res = await fetch('/api/todos', { headers: authHeaders() })
   return res.json()
 }
 
@@ -36,7 +37,7 @@ export async function createTodo(title: string): Promise<Todo> {
   }
   const res = await fetch('/api/todos', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ title }),
   })
   return res.json()
@@ -51,7 +52,7 @@ export async function updateTodo(id: number, done: boolean): Promise<Todo> {
   }
   const res = await fetch(`/api/todos/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ done }),
   })
   return res.json()
@@ -62,5 +63,5 @@ export async function removeTodo(id: number): Promise<void> {
     saveLocal(loadLocal().filter(t => t.id !== id))
     return
   }
-  await fetch(`/api/todos/${id}`, { method: 'DELETE' })
+  await fetch(`/api/todos/${id}`, { method: 'DELETE', headers: authHeaders() })
 }
