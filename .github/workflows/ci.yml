@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
@@ -36,12 +34,10 @@ jobs:
 
       - name: Build frontend
         run: npm --prefix client run build
-        env:
-          VITE_API_URL: https://hello-todo.jamkline03.workers.dev
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: public
           path: public/
 
   e2e:
@@ -80,14 +76,27 @@ jobs:
     needs: [build, e2e]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: public
+          path: public/
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: worker
+        run: |
+          npm install
+          npx wrangler pages deploy ../public/ --project-name=hello-todo --functions-dir=../functions
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   deploy-worker:
     needs: e2e
