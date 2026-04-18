@@ -11,6 +11,7 @@
 
 ```
 build ──→ e2e ──→ deploy（mainのみ）
+               └→ deploy-worker（mainのみ）
 ```
 
 ### build
@@ -22,8 +23,8 @@ build ──→ e2e ──→ deploy（mainのみ）
 | Install backend deps | `npm install` |
 | Install frontend deps | `npm install --prefix client` |
 | Type check | `tsc --noEmit`（`client/` で実行） |
-| Build frontend | `npm --prefix client run build`（`VITE_STORAGE=local`） |
-| Upload Pages artifact | ビルド成果物（`public/`）をPages用にアップロード |
+| Build frontend | `npm --prefix client run build`（`public/` に出力） |
+| Upload artifact | ビルド成果物（`public/`）をアーティファクトとして保存 |
 
 ### e2e
 
@@ -35,23 +36,38 @@ buildジョブ完了後に実行。
 | Setup Node.js 22 | キャッシュあり |
 | Install frontend deps | `npm install --prefix client` |
 | Install Playwright browsers | Chromiumのみインストール（`--with-deps`） |
-| Run e2e tests | `npx playwright test`（`client/` で実行） |
+| Run e2e tests | `npx playwright test`（`client/` で実行、`VITE_STORAGE=local`） |
 | Upload test report | テスト失敗時のみ、HTMLレポートを7日間保存 |
 
-### deploy
+### deploy（Cloudflare Pages）
 
 buildおよびe2eジョブ完了後、**mainブランチへのpush時のみ**実行。
 
 | ステップ | 内容 |
 |---|---|
-| Deploy to GitHub Pages | `actions/deploy-pages` でデプロイ |
+| Checkout | ソースコード取得 |
+| Download artifact | buildジョブの `public/` を取得 |
+| Deploy to Cloudflare Pages | `wrangler pages deploy public/ --project-name=hello-todo`（リポジトリルートから実行、`functions/` を自動検出） |
 
-デプロイ先: `https://johnson6128.github.io/hello/`
+デプロイ先: `https://hello-todo.pages.dev`
 
-## 必要なリポジトリ設定
+### deploy-worker（Cloudflare Workers）
 
-- Settings → Pages → Source: **GitHub Actions**
-- Permissions（`ci.yml`内で設定済み）:
-  - `contents: read`
-  - `pages: write`
-  - `id-token: write`
+e2eジョブ完了後、**mainブランチへのpush時のみ**実行。
+
+| ステップ | 内容 |
+|---|---|
+| Checkout | ソースコード取得 |
+| Install worker deps | `npm install --prefix worker` |
+| Deploy Cloudflare Worker | `npx wrangler deploy`（`worker/` で実行） |
+
+デプロイ先: `https://hello-todo.jamkline03.workers.dev`
+
+## 必要なGitHub Secrets
+
+| Secret名 | 取得場所 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare Dashboard → My Profile → API Tokens |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → 右サイドバー |
+
+APIトークンに必要な権限: `Workers Scripts:Edit`, `D1:Edit`, `Cloudflare Pages:Edit`
